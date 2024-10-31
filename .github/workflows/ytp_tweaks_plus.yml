@@ -1,4 +1,4 @@
-name: YouTube Plus + YouPiP, YTUHD, RYD, DontEatMyContent, native-share, Hold, and Overlay
+name: YouTube Plus + YouPiP, YTUHD, RYD, native-share, Hold, and Overlay
 
 on:
   workflow_dispatch:
@@ -103,6 +103,20 @@ jobs:
           fi
         env:
           THEOS: ${{ github.workspace }}/theos
+      
+      - name: Clone protobuf
+        run: |
+          if [ -d "$THEOS/include/protobuf" ]; then
+            echo "protobuf exists. Pulling latest changes..."
+            cd $THEOS/include/protobuf
+            git pull
+          else
+            echo "protobuf does not exist. Cloning repository..."
+            cd $THEOS/include
+            git clone --quiet --depth=1 https://github.com/protocolbuffers/protobuf
+          fi
+        env:
+          THEOS: ${{ github.workspace }}/theos
 
       - name: Clone YouPiP
         run: |
@@ -118,11 +132,6 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           git clone --quiet --depth=1 https://github.com/PoomSmart/Return-YouTube-Dislikes.git
-    
-      - name: Clone DontEatMyContent
-        run: |
-          cd ${{ github.workspace }}
-          git clone --quiet --depth=1 https://github.com/therealFoxster/DontEatMyContent
 
       - name: Clone youtube-native-share
         run: |
@@ -163,14 +172,6 @@ jobs:
         env:
           THEOS: ${{ github.workspace }}/theos
 
-      - name: Build DontEatMyContent
-        run: |
-          cd ${{ github.workspace }}/DontEatMyContent
-          make clean package DEBUG=0 FINALPACKAGE=1
-          mv packages/*.deb ${{ github.workspace }}/demc.deb
-        env:
-          THEOS: ${{ github.workspace }}/theos
-
       - name: Build youtube-native-share
         run: |
           cd ${{ github.workspace }}/youtube-native-share
@@ -198,7 +199,7 @@ jobs:
       - name: Inject tweaks into IPA
         run: |
           cyan -i youtube.ipa -o YouTubePlus_${{ inputs.tweak_version }}_Tweaks.ipa \
-            -uwf ytplus.deb OpenYoutubeSafariExtension.appex youpip.deb ytuhd.deb ryd.deb demc.deb yns.deb ythold.deb ytover.deb
+            -uwf ytplus.deb OpenYoutubeSafariExtension.appex youpip.deb ytuhd.deb ryd.deb yns.deb ythold.deb ytover.deb
 
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2.0.1
